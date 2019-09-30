@@ -127,15 +127,14 @@ class GarageDoor extends Relay {
     await this.sendCommand(1);
   }
 
-  setState(targetState) {
-    switch (targetState) {
-      case OPEN:
-        this.open();
-        break;
-      case CLOSED:
-        this.close();
-        break;
+  setState(value, callback) {
+    if (value === OPEN && this.currentState !== OPEN) {
+      this.open();
+    } else if (value === CLOSED && this.currentState !== CLOSED) {
+      this.close();
     }
+
+    callback();
   }
 }
 
@@ -171,10 +170,7 @@ garageDoor
 garageDoor
   .getService(Service.GarageDoorOpener, options.name)
   .getCharacteristic(Characteristic.TargetDoorState)
-  .on('set', function(value, callback) {
-     GarageDoorAcc.setState(value);
-     callback();
-});
+  .on('set', GarageDoorAcc.setState);
 
 garageDoor
   .getService(Service.GarageDoorOpener, options.name)
