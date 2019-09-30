@@ -88,8 +88,8 @@ const OPEN = 0,
 class GarageDoor extends Relay {
   constructor (ip, password, channel, openSwitchConfig, closeSwitchConfig) {
     super(ip, password, channel);
-    this.openSwitch = new Switch(openSwitchConfig.ip, openSwitchConfig.channel, openSwitchConfig.password);
-    this.closeSwitch = new Switch(closeSwitchConfig.ip, closeSwitchConfig.channel, closeSwitchConfig.password);
+    this.openSwitch = new Switch(openSwitchConfig.ip, openSwitchConfig.password, openSwitchConfig.channel);
+    this.closeSwitch = new Switch(closeSwitchConfig.ip, closeSwitchConfig.password, closeSwitchConfig.channel);
     this.lastState = OPEN;
     this.currentState = OPEN;
 
