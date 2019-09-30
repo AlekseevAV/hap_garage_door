@@ -101,9 +101,11 @@ class GarageDoor extends Relay {
     if (await this.isOpen()) {
       this.currentState = this.lastState = OPEN;
       this.garageDoorHK.getService(Service.GarageDoorOpener).setCharacteristic(Characteristic.CurrentDoorState, OPEN);
+      this.garageDoorHK.getService(Service.GarageDoorOpener).setCharacteristic(Characteristic.TargetDoorState, OPEN);
     } else if (await this.isClosed()) {
       this.currentState = this.lastState = CLOSED;
       this.garageDoorHK.getService(Service.GarageDoorOpener).setCharacteristic(Characteristic.CurrentDoorState, CLOSED);
+      this.garageDoorHK.getService(Service.GarageDoorOpener).setCharacteristic(Characteristic.TargetDoorState, CLOSED);
     } else if (this.lastState === OPEN) {
       this.currentState = CLOSING;
       this.garageDoorHK.getService(Service.GarageDoorOpener).setCharacteristic(Characteristic.CurrentDoorState, CLOSING);
