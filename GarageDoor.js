@@ -172,6 +172,6 @@ garageDoor
 garageDoor
   .getService(Service.GarageDoorOpener, options.name)
   .getCharacteristic(Characteristic.ObstructionDetected)
-  .on('get', function(value, callback) {
+  .on('get', function(callback) {
      callback(null, false);
 });
