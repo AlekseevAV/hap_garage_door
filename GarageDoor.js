@@ -101,17 +101,19 @@ class GarageDoor extends Relay {
     if (await this.isOpen()) {
       this.currentState = this.lastState = OPEN;
       this.garageDoorHK.getService(Service.GarageDoorOpener).setCharacteristic(Characteristic.CurrentDoorState, OPEN);
-      this.garageDoorHK.getService(Service.GarageDoorOpener).setCharacteristic(Characteristic.TargetDoorState, OPEN);
+      this.garageDoorHK.getService(Service.GarageDoorOpener).updateCharacteristic(Characteristic.TargetDoorState, OPEN);
     } else if (await this.isClosed()) {
       this.currentState = this.lastState = CLOSED;
       this.garageDoorHK.getService(Service.GarageDoorOpener).setCharacteristic(Characteristic.CurrentDoorState, CLOSED);
-      this.garageDoorHK.getService(Service.GarageDoorOpener).setCharacteristic(Characteristic.TargetDoorState, CLOSED);
+      this.garageDoorHK.getService(Service.GarageDoorOpener).updateCharacteristic(Characteristic.TargetDoorState, CLOSED);
     } else if (this.lastState === OPEN) {
       this.currentState = CLOSING;
       this.garageDoorHK.getService(Service.GarageDoorOpener).setCharacteristic(Characteristic.CurrentDoorState, CLOSING);
-    } else if (this.lastState === CLOSING) {
+      this.garageDoorHK.getService(Service.GarageDoorOpener).updateCharacteristic(Characteristic.TargetDoorState, CLOSED);
+    } else if (this.lastState === CLOSED) {
       this.currentState = OPENING;
       this.garageDoorHK.getService(Service.GarageDoorOpener).setCharacteristic(Characteristic.CurrentDoorState, OPENING);
+      this.garageDoorHK.getService(Service.GarageDoorOpener).updateCharacteristic(Characteristic.TargetDoorState, OPEN);
     }
   }
 
@@ -128,10 +130,13 @@ class GarageDoor extends Relay {
   }
 
   setState(targetState) {
-    if (targetState === OPEN && this.currentState !== OPEN) {
-      this.open();
-    } else if (targetState === CLOSED && this.currentState !== CLOSED) {
-      this.close();
+    switch (targetState) {
+      case OPEN:
+        this.open();
+        break;
+      case CLOSED:
+        this.close();
+        break;
     }
   }
 }
