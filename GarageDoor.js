@@ -93,7 +93,7 @@ class GarageDoor extends Relay {
     this.lastState = OPEN;
     this.currentState = OPEN;
 
-    setInterval(this.updateCurrentState, 2000);
+    setInterval(this.updateCurrentState.bind(this), 2000);
   }
 
   async updateCurrentState() {
