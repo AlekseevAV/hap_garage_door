@@ -162,7 +162,7 @@ garageDoor
 });
 
 garageDoor
-  .addService(Service.GarageDoorOpener, options.name)
+  .getService(Service.GarageDoorOpener, options.name)
   .getCharacteristic(Characteristic.TargetDoorState)
   .on('set', function(value, callback) {
      GarageDoorAcc.setState(value);
@@ -170,7 +170,7 @@ garageDoor
 });
 
 garageDoor
-  .addService(Service.GarageDoorOpener, options.name)
+  .getService(Service.GarageDoorOpener, options.name)
   .getCharacteristic(Characteristic.ObstructionDetected)
   .on('get', function(value, callback) {
      callback(null, false);
