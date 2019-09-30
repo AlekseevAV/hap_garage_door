@@ -86,8 +86,9 @@ const OPEN = 0,
 
 
 class GarageDoor extends Relay {
-  constructor (ip, password, channel, openSwitchConfig, closeSwitchConfig) {
+  constructor (garageDoorHK, ip, password, channel, openSwitchConfig, closeSwitchConfig) {
     super(ip, password, channel);
+    this.garageDoorHK = garageDoorHK;
     this.openSwitch = new Switch(openSwitchConfig.ip, openSwitchConfig.password, openSwitchConfig.channel);
     this.closeSwitch = new Switch(closeSwitchConfig.ip, closeSwitchConfig.password, closeSwitchConfig.channel);
     this.lastState = OPEN;
@@ -99,12 +100,16 @@ class GarageDoor extends Relay {
   async updateCurrentState() {
     if (await this.isOpen()) {
       this.currentState = this.lastState = OPEN;
+      this.garageDoorHK.getService(Service.GarageDoorOpener).setCharacteristic(Characteristic.CurrentDoorState, OPEN);
     } else if (await this.isClosed()) {
       this.currentState = this.lastState = CLOSED;
+      this.garageDoorHK.getService(Service.GarageDoorOpener).setCharacteristic(Characteristic.CurrentDoorState, CLOSED);
     } else if (this.lastState === OPEN) {
-      this.currentState = CLOSING
+      this.currentState = CLOSING;
+      this.garageDoorHK.getService(Service.GarageDoorOpener).setCharacteristic(Characteristic.CurrentDoorState, CLOSING);
     } else if (this.lastState === CLOSING) {
-      this.currentState = OPENING
+      this.currentState = OPENING;
+      this.garageDoorHK.getService(Service.GarageDoorOpener).setCharacteristic(Characteristic.CurrentDoorState, OPENING);
     }
   }
 
@@ -132,9 +137,9 @@ class GarageDoor extends Relay {
   }
 }
 
-let GarageDoorAcc = new GarageDoor(options.ip, options.password, options.channel, options.openSwitch, options.closeSwitch);
 let GarageDoorUUID = uuid.generate('hap-nodejs:accessories:'+ options.name);
 let garageDoor = exports.accessory = new Accessory(options.name, GarageDoorUUID);
+let GarageDoorAcc = new GarageDoor(garageDoor, options.door.ip, options.door.password, options.door.channel, options.openSwitch, options.closeSwitch);
 
 // Add properties for publishing (in case we're using Core.js and not BridgedCore.js)
 garageDoor.username = "2A:2B:3D:4D:2E:A1";
