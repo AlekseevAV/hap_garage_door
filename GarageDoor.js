@@ -93,16 +93,18 @@ class GarageDoor extends Relay {
     this.closeSwitch = new Switch(closeSwitchConfig.ip, closeSwitchConfig.password, closeSwitchConfig.channel);
     this.lastState = OPEN;
     this.currentState = OPEN;
+    this.lastCommand = new Date();
 
     setInterval(this.updateCurrentState.bind(this), 2000);
   }
 
   async updateCurrentState() {
-    if (await this.isOpen()) {
+    const waitAfterLastCommand = (new Date - this.lastCommand) < 5000;
+    if (await this.isOpen() && (waitAfterLastCommand === false)) {
       this.currentState = this.lastState = OPEN;
       this.garageDoorHK.getService(Service.GarageDoorOpener).setCharacteristic(Characteristic.CurrentDoorState, OPEN);
       this.garageDoorHK.getService(Service.GarageDoorOpener).updateCharacteristic(Characteristic.TargetDoorState, OPEN);
-    } else if (await this.isClosed()) {
+    } else if (await this.isClosed() && (waitAfterLastCommand === false)) {
       this.currentState = this.lastState = CLOSED;
       this.garageDoorHK.getService(Service.GarageDoorOpener).setCharacteristic(Characteristic.CurrentDoorState, CLOSED);
       this.garageDoorHK.getService(Service.GarageDoorOpener).updateCharacteristic(Characteristic.TargetDoorState, CLOSED);
@@ -138,6 +140,7 @@ class GarageDoor extends Relay {
         this.close();
         break;
     }
+    this.lastCommand = new Date();
   }
 }
 
