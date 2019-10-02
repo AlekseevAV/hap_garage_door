@@ -110,9 +110,13 @@ class GarageDoor extends Relay {
   constructor (garageDoorHK, options) {
     super(options.door.ip, options.door.password, options.door.channel);
     this.garageDoorHK = garageDoorHK;
-    this.openSwitch = new Switch(options.openSwitch.ip, options.openSwitch.password, options.openSwitch.channel);
-    this.closeSwitch = new Switch(options.closeSwitch.ip, options.closeSwitch.password, options.closeSwitch.channel);
-    this.lastState = OPEN;
+    if (options.openSwitch) {
+      this.openSwitch = new Switch(options.openSwitch.ip, options.openSwitch.password, options.openSwitch.channel);
+    }
+    if (options.closeSwitch) {
+      this.closeSwitch = new Switch(options.closeSwitch.ip, options.closeSwitch.password, options.closeSwitch.channel);
+    }
+    this.lastState = null;
     this.currentState = OPEN;
     this.lastCommandTime = new Date();
     this.delayUpdateAfterLastCommand = options.door.delayUpdateAfterLastCommand || 5000;
@@ -169,7 +173,7 @@ class GarageDoor extends Relay {
 class GarageDoorWithoutSwitch extends GarageDoor {
   constructor (garageDoorHK, options) {
     super(garageDoorHK, options);
-    this.openCloseTimeout = options.openCloseTimeout;
+    this.openCloseTimeout = options.door.openCloseTimeout;
     this.lastCommand = null;
   }
 
