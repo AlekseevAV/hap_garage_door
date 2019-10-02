@@ -4,7 +4,7 @@ let Characteristic = require('../').Characteristic;
 let uuid = require('../').uuid;
 const axios = require('axios');
 
-
+// Настроки для работы с концевиками
 let options = {
   name: 'Гаражные ворота',
   moduleName: 'GarageDoor',
@@ -21,9 +21,30 @@ let options = {
   door: {
     ip: '192.168.0.91',
     channel: '4',
-    password: 'sec'
+    password: 'sec',
+    // Интервал обновления состояния ворот в милисекундах
+    updateTimeout: 2000,
+    // Время в милисекундах, на которое откладывается обновление состояния после последней команды
+    delayUpdateAfterLastCommand: 5000
   }
 };
+
+// Пример настроек для работы без концевиков
+// let options = {
+//   name: 'Гаражные ворота',
+//   moduleName: 'GarageDoor',
+//   door: {
+//     ip: '192.168.0.91',
+//     channel: '4',
+//     password: 'sec',
+//     // Интервал обновления состояния ворот в милисекундах
+//     updateTimeout: 2000,
+//     // Время в милисекундах, на которое откладывается обновление состояния после последней команды
+//     delayUpdateAfterLastCommand: 5000,
+//     // Время полного открытия/закрытия ворот в милисекундах
+//     openCloseTimeout: 5000
+//   }
+// };
 
 
 class Relay {
@@ -86,20 +107,21 @@ const OPEN = 0,
 
 
 class GarageDoor extends Relay {
-  constructor (garageDoorHK, ip, password, channel, openSwitchConfig, closeSwitchConfig) {
-    super(ip, password, channel);
+  constructor (garageDoorHK, options) {
+    super(options.door.ip, options.door.password, options.door.channel);
     this.garageDoorHK = garageDoorHK;
-    this.openSwitch = new Switch(openSwitchConfig.ip, openSwitchConfig.password, openSwitchConfig.channel);
-    this.closeSwitch = new Switch(closeSwitchConfig.ip, closeSwitchConfig.password, closeSwitchConfig.channel);
+    this.openSwitch = new Switch(options.openSwitch.ip, options.openSwitch.password, options.openSwitch.channel);
+    this.closeSwitch = new Switch(options.closeSwitch.ip, options.closeSwitch.password, options.closeSwitch.channel);
     this.lastState = OPEN;
     this.currentState = OPEN;
-    this.lastCommand = new Date();
+    this.lastCommandTime = new Date();
+    this.delayUpdateAfterLastCommand = options.door.delayUpdateAfterLastCommand || 5000;
 
-    setInterval(this.updateCurrentState.bind(this), 2000);
+    setInterval(this.updateCurrentState.bind(this), options.door.updateTimeout);
   }
 
   async updateCurrentState() {
-    const waitAfterLastCommand = (new Date - this.lastCommand) < 5000;
+    const waitAfterLastCommand = (new Date - this.lastCommandTime) < this.delayUpdateAfterLastCommand;
     if (await this.isOpen() && (waitAfterLastCommand === false)) {
       this.currentState = this.lastState = OPEN;
       this.garageDoorHK.getService(Service.GarageDoorOpener).setCharacteristic(Characteristic.CurrentDoorState, OPEN);
@@ -140,13 +162,46 @@ class GarageDoor extends Relay {
         this.close();
         break;
     }
-    this.lastCommand = new Date();
+    this.lastCommandTime = new Date();
+  }
+}
+
+class GarageDoorWithoutSwitch extends GarageDoor {
+  constructor (garageDoorHK, options) {
+    super(garageDoorHK, options);
+    this.openCloseTimeout = options.openCloseTimeout;
+    this.lastCommand = null;
+  }
+
+  isDoorShouldSwitchState() {
+    return (new Date - this.lastCommandTime) > this.openCloseTimeout
+  }
+
+  async isOpen() {
+    return this.lastCommand === OPEN && this.isDoorShouldSwitchState()
+  }
+
+  async isClosed() {
+    return this.lastCommand === CLOSED && this.isDoorShouldSwitchState()
+  }
+
+  setState(targetState) {
+    super.setState(targetState);
+    this.lastCommand = targetState;
   }
 }
 
 let GarageDoorUUID = uuid.generate('hap-nodejs:accessories:'+ options.name);
 let garageDoor = exports.accessory = new Accessory(options.name, GarageDoorUUID);
-let GarageDoorAcc = new GarageDoor(garageDoor, options.door.ip, options.door.password, options.door.channel, options.openSwitch, options.closeSwitch);
+let GarageDoorAcc = null;
+
+if (options.openSwitch && options.closeSwitch) {
+  GarageDoorAcc = new GarageDoor(garageDoor, options);
+} else if (options.door.openCloseTimeout) {
+  GarageDoorAcc = new GarageDoorWithoutSwitch(garageDoor, options);
+} else {
+  throw Error('You should provide both openSwitchConfig or closeSwitchConfig or set openCloseTimeout in options')
+}
 
 // Add properties for publishing (in case we're using Core.js and not BridgedCore.js)
 garageDoor.username = "2A:2B:3D:4D:2E:A1";
