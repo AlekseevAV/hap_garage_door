@@ -116,7 +116,7 @@ class GarageDoor extends Relay {
     if (options.closeSwitch) {
       this.closeSwitch = new Switch(options.closeSwitch.ip, options.closeSwitch.password, options.closeSwitch.channel);
     }
-    this.lastState = null;
+    this.lastState = OPEN;
     this.currentState = OPEN;
     this.lastCommandTime = new Date();
     this.delayUpdateAfterLastCommand = options.door.delayUpdateAfterLastCommand || 5000;
@@ -175,6 +175,7 @@ class GarageDoorWithoutSwitch extends GarageDoor {
     super(garageDoorHK, options);
     this.openCloseTimeout = options.door.openCloseTimeout;
     this.lastCommand = null;
+    this.lastState = null;
   }
 
   isDoorShouldSwitchState() {
